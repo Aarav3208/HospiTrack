@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hospital Finder</title>
+
+    <!-- Debug: Try multiple CSS path approaches -->
+    <link rel="stylesheet" th:href="@{/styles.css}">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../static/styles.css">
+
+    <!-- Debug: Try multiple JS path approaches -->
+    <script th:src="@{/js/states-and-districts.js}"></script>
+    <script src="/js/states-and-districts.js"></script>
+
+    <!-- Inline CSS as backup -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }
+
+        .header {
+            background: #dc3545;
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: end;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #212529;
+            font-size: 0.95rem;
+        }
+
+        select {
+            padding: 12px 16px;
+            border: 2px solid #ced4da;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+
+        select:hover {
+            border-color: #0d6efd;
+        }
+
+        button {
+            background: #212529;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(33, 37, 41, 0.3);
+        }
+
+        button:hover {
+            background: #495057;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 37, 41, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results-container {
+            padding: 0 40px 40px;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .results-header h3 {
+            font-size: 1.8rem;
+            color: #212529;
+            margin-bottom: 10px;
+        }
+
+        .results-header span {
+            color: #0d6efd;
+            font-weight: 700;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin: 0;
+        }
+
+        thead {
+            background: #212529;
+        }
+
+        th {
+            padding: 20px 15px;
+            text-align: left;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        td {
+            padding: 18px 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.95rem;
+        }
+
+        td:first-child {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.1rem;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .no-results::before {
+            content: "🏥";
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h2 {
+                font-size: 2rem;
+            }
+
+            .form-container {
+                padding: 30px 20px;
+            }
+
+            form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-group {
+                min-width: auto;
+            }
+
+            .results-container {
+                padding: 0 20px 30px;
+            }
+
+            th, td {
+                padding: 12px 8px;
+                font-size: 0.85rem;
+            }
+
+            .results-header h3 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h2 {
+                font-size: 1.8rem;
+            }
+
+            .table-container {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 10px 6px;
+            }
+        }
+
+        /* Loading animation for form elements */
+        select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Custom scrollbar for table */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2> HospiTrack 🏥</h2>
+        <p>Find the best healthcare facilities in your area </p>
+        <p>Made by <a href="https://www.linkedin.com/in/aarav-sharma1300/" target="_blank" style="color:blue; text-decoration: underline;">Aarav Sharma</a></p>
+
+    </div>
+
+    <div class="form-container">
+        <form method="get" action="/search">
+            <div class="form-group">
+                <label for="state">State:</label>
+                <select id="state" name="state" required>
+                    <option value="">-- Select State --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="district">District:</label>
+                <select id="district" name="district" required>
+                    <option value="">-- Select District --</option>
+                </select>
+            </div>
+
+            <button type="submit">🔍 Search Hospitals</button>
+        </form>
+    </div>
+
+    <!-- Results only appear after selecting state and district -->
+    <div class="results-container" th:if="${state != null and district != null}">
+        <div class="results-header">
+            <h3>Hospitals in <span th:text="${district}"></span>, <span th:text="${state}"></span></h3>
+        </div>
+
+        <div class="table-container" th:if="${hospitals != null and !hospitals.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>🏥 Hospital Name</th>
+                    <th>📍 Location</th>
+                    <th>🛏️ Available Beds</th>
+                    <th>🫁 Oxygen Cylinders</th>
+                    <th>🩸 Blood Bags</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="hospital : ${hospitals}">
+                    <td th:text="${hospital.hospitalName}">Hospital Name</td>
+                    <td th:text="${hospital.location}">Location</td>
+                    <td th:text="${hospital.availableBeds}">Beds</td>
+                    <td th:text="${hospital.oxygenCylinders}">O2</td>
+                    <td th:text="${hospital.bloodBags}">Blood</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="no-results" th:if="${hospitals.isEmpty()}">
+            <p>No hospitals found in this area.</p>
+            <small>Please try selecting a different location or check back later.</small>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
